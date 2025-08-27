@@ -1,20 +1,15 @@
 import pandas as pd
 import os
 import ast
-import streamlit as st
-import seaborn as sns
-import matplotlib.pyplot as plt
 import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from collections import Counter
 import boto3
 from io import StringIO
 
 
-# s3のcsvを取得するバージョン
+# -----------------
+# RawData読み込み
+# -----------------
 df = pd.read_csv('s3://myproject-row-data1/all_pages.csv')
-# df = pd.read_csv('./data/all_pages.csv')
 
 # -----------------
 # コラム厳選
@@ -107,9 +102,6 @@ new_order = [
 ]
 df_filtered = df_filtered[new_order]
 
-# df_filtered.to_csv('data/filtered.csv', index=False, encoding='utf-8-sig')　←ローカルのインスタンスに保存
-# print("\n必要なデータ絞り込みました:")
-
 # ーーーーーーー
 # S3に保存
 # ーーーーーーー
@@ -119,9 +111,9 @@ df_filtered.to_csv(csv_buffer, index=False, encoding='utf-8')
 # S3クライアントを初期化
 s3_client = boto3.client('s3')
 
-# S3バケットにCSVファイルをアップロード
+# FilterDataをS3へアップ
 bucket_name = 'myproject-row-data1 '
-file_key = 'filtered.csv' # S3に保存されるファイル名
+file_key = 'filtered.csv'
 
 try:
     s3_client.put_object(
@@ -132,3 +124,41 @@ try:
     print(f"S3に加工済みデータをアップロードしました: s3://{bucket_name}/{file_key}")
 except Exception as e:
     print(f"アップロードに失敗しました: {e}")
+
+
+# -----------------
+# FilterData読み込み
+# -----------------
+# RDSの接続情報を環境変数から取得
+DB_HOST = os.environ.get("DB_HOST")
+DB_NAME = os.environ.get("DB_NAME")
+DB_USER = os.environ.get("DB_USER")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+DB_PORT = 5432  # PostgreSQLのデフォルトポート
+
+# S3からデータを直接DataFrameに読み込む
+bucket_name = 'myproject-row-data1'
+file_key = 'filtered.csv'
+s3_client = boto3.client('s3')
+
+try:
+    obj = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+    df = pd.read_csv(obj['Body'])
+    print("S3からデータの読み込みが完了しました。")
+except Exception as e:
+    print(f"S3からデータの読み込み中にエラーが発生しました: {e}")
+    # エラーが発生した場合はここでスクリプトを終了
+    exit()
+
+# RDSへの接続URLを作成
+db_url = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+engine = sqlalchemy.create_engine(db_url)
+
+# RDSへデータを直接書き出す
+table_name = 'job_offers_filtered'
+
+try:
+    df.to_sql(table_name, con=engine, if_exists='replace', index=False)
+    print(f"'{table_name}' テーブルへのデータの書き出しが完了しました。")
+except Exception as e:
+    print(f"RDSへのデータの書き出し中にエラーが発生しました: {e}")

@@ -1,10 +1,9 @@
 boto3
+s3fs
 pandas
 numpy
 streamlit
 psycopg2-binary
 sqlalchemy
 plotly
-fsspec
 python-dotenv
-s3fs

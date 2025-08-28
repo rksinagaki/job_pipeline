@@ -4,10 +4,33 @@ import plotly.express as px
 import plotly.graph_objects as go
 from collections import Counter
 import boto3
+import ast
 
+def to_list(value):
+    if value is None:
+        return None
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str):
+        try:
+            return ast.literal_eval(value)
+        except Exception:
+            return None
+    if isinstance(value, float) and pd.isna(value):
+        return None
+    return None
 
 try:
     df_filtered = pd.read_csv('s3://myproject-row-data1/filtered.csv')
+
+    # -----------------
+    # リストデータ化
+    # -----------------
+    if 'job_offer_skill_names' in df_filtered.columns:
+        df_filtered['job_offer_skill_names'] = df_filtered['job_offer_skill_names'].apply(to_list)
+
+    if 'job_offer_areas' in df_filtered.columns:
+        df_filtered['job_offer_areas'] = df_filtered['job_offer_areas'].apply(to_list)
 
     # -----------------
     # ダッシュボード化

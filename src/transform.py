@@ -4,6 +4,7 @@ import ast
 import numpy as np
 import boto3
 from io import StringIO
+import sqlalchemy
 
 
 # -----------------
@@ -100,6 +101,7 @@ new_order = [
     'job_offer_max_salary',
     'avg_salary',
 ]
+
 df_filtered = df_filtered[new_order]
 
 # ーーーーーーー
@@ -134,7 +136,7 @@ DB_HOST = os.environ.get("DB_HOST")
 DB_NAME = os.environ.get("DB_NAME")
 DB_USER = os.environ.get("DB_USER")
 DB_PASSWORD = os.environ.get("DB_PASSWORD")
-DB_PORT = 5432  # PostgreSQLのデフォルトポート
+DB_PORT = 5432
 
 # S3からデータを直接DataFrameに読み込む
 bucket_name = 'myproject-row-data1'

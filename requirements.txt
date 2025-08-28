@@ -7,3 +7,4 @@ sqlalchemy
 plotly
 fsspec
 python-dotenv
+s3fs

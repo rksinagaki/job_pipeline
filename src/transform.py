@@ -5,6 +5,7 @@ import numpy as np
 import boto3
 from io import StringIO
 import sqlalchemy
+from dotenv import load_dotenv
 
 
 # -----------------
@@ -114,7 +115,7 @@ df_filtered.to_csv(csv_buffer, index=False, encoding='utf-8')
 s3_client = boto3.client('s3')
 
 # FilterDataをS3へアップ
-bucket_name = 'myproject-row-data1 '
+bucket_name = 'myproject-row-data1'
 file_key = 'filtered.csv'
 
 try:
